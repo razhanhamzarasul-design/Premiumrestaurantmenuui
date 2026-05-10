@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, ShoppingCart, Plus, Languages } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Languages, X, Trash2 } from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -132,6 +132,10 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isRTL, setIsRTL] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  
+  const restaurantWhatsApp = "9647503358550"; 
 
   const filteredMenu = selectedCategory === 'all'
     ? menuData
@@ -149,7 +153,27 @@ export default function App() {
     });
   };
 
+  const removeFromCart = (id: string) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  const handleWhatsAppOrder = () => {
+    let message = isRTL ? "*داواکاری نوێ*\n\n" : "*New Order Request*\n\n";
+    
+    cart.forEach((item, index) => {
+      const name = isRTL ? item.nameAr : item.nameEn;
+      message += `${index + 1}. ${name} (${item.quantity}x) - $${item.price * item.quantity}\n`;
+    });
+
+    message += `\n--------------------------\n`;
+    message += isRTL ? `*کۆی گشتی: $${totalPrice}*` : `*Total Amount: $${totalPrice}*`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${restaurantWhatsApp}?text=${encodedMessage}`, '_blank');
+  };
 
   return (
     <div
@@ -182,7 +206,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Search Bar */}
         {searchOpen && (
           <div className="px-4 pb-4 max-w-md mx-auto">
             <input
@@ -194,7 +217,7 @@ export default function App() {
         )}
       </header>
 
-      {/* Horizontal Scrollable Categories */}
+      {/* Categories */}
       <div className="sticky top-16 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-[#d4af37]/10">
         <div className="max-w-md mx-auto overflow-x-auto scrollbar-hide">
           <div className="flex gap-2 px-4 py-4">
@@ -223,41 +246,22 @@ export default function App() {
           {filteredMenu.map(item => (
             <div
               key={item.id}
-              className="group bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl overflow-hidden border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300 hover:shadow-xl hover:shadow-[#d4af37]/5"
+              className="group bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl overflow-hidden border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300"
             >
               <div className="relative h-48 overflow-hidden">
-                <img
-                  src={item.image}
-                  alt={isRTL ? item.nameAr : item.nameEn}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <img src={item.image} alt="" className="w-full h-full object-cover" />
               </div>
-
               <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg mb-1">
-                      {isRTL ? item.nameAr : item.nameEn}
-                    </h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">
-                      {isRTL ? item.descriptionAr : item.descriptionEn}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl text-[#d4af37]">${item.price}</span>
-                    <span className="text-xs text-gray-500">USD</span>
-                  </div>
-
+                <h3 className="text-lg mb-1">{isRTL ? item.nameAr : item.nameEn}</h3>
+                <p className="text-sm text-gray-400 mb-4">{isRTL ? item.descriptionAr : item.descriptionEn}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl text-[#d4af37]">${item.price}</span>
                   <button
                     onClick={() => addToCart(item)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#d4af37] to-[#f4bf47] text-black px-5 py-2.5 rounded-full hover:shadow-lg hover:shadow-[#d4af37]/30 transition-all duration-300 active:scale-95"
+                    className="flex items-center gap-2 bg-[#d4af37] text-black px-5 py-2 rounded-full font-medium"
                   >
                     <Plus className="w-4 h-4" />
-                    <span className="text-sm">{isRTL ? 'إضافة' : 'Add'}</span>
+                    {isRTL ? 'إضافة' : 'Add'}
                   </button>
                 </div>
               </div>
@@ -268,7 +272,10 @@ export default function App() {
 
       {/* Floating Cart Button */}
       {totalItems > 0 && (
-        <button className="fixed bottom-6 right-6 bg-gradient-to-r from-[#d4af37] to-[#f4bf47] text-black p-4 rounded-full shadow-2xl shadow-[#d4af37]/40 hover:scale-110 transition-transform duration-300 z-50">
+        <button 
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-6 right-6 bg-[#d4af37] text-black p-4 rounded-full shadow-2xl z-50"
+        >
           <div className="relative">
             <ShoppingCart className="w-6 h-6" />
             <span className="absolute -top-2 -right-2 bg-black text-[#d4af37] text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -276,6 +283,46 @@ export default function App() {
             </span>
           </div>
         </button>
+      )}
+
+      {/* Cart Modal / Slide-over */}
+      {cartOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm">
+          <div className="max-w-md mx-auto h-full bg-[#0a0a0a] flex flex-col">
+            <div className="p-4 border-b border-[#d4af37]/20 flex items-center justify-between">
+              <h2 className="text-xl text-[#d4af37] font-serif">{isRTL ? 'سەبەتەی داواکاری' : 'Order Cart'}</h2>
+              <button onClick={() => setCartOpen(false)}><X className="w-6 h-6" /></button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {cart.map(item => (
+                <div key={item.id} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-xl">
+                  <img src={item.image} className="w-16 h-16 rounded-lg object-cover" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium">{isRTL ? item.nameAr : item.nameEn}</h4>
+                    <p className="text-[#d4af37]">${item.price} x {item.quantity}</p>
+                  </div>
+                  <button onClick={() => removeFromCart(item.id)} className="text-red-500 p-2">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 border-t border-[#d4af37]/20 bg-[#1a1a1a]">
+              <div className="flex justify-between mb-4 text-xl">
+                <span>{isRTL ? 'کۆی گشتی:' : 'Total:'}</span>
+                <span className="text-[#d4af37]">${totalPrice}</span>
+              </div>
+              <button
+                onClick={handleWhatsAppOrder}
+                className="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-green-700 transition-colors"
+              >
+                {isRTL ? 'ناردن بۆ واتسئەپ' : 'Send to WhatsApp'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
