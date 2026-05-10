@@ -213,4 +213,161 @@ export default function App() {
     });
 
     message += `\n--------------------------\n`;
-    message += t(`*Total Amount: $${totalPrice}*`,
+    message += t(`*Total Amount: $${totalPrice}*`, `*المجموع: $${totalPrice}*`, `*کۆی گشتی: $${totalPrice}*`);
+    
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${restaurantWhatsApp}?text=${encodedMessage}`, '_blank');
+  };
+
+  return (
+    <div
+      className="min-h-screen bg-[#0a0a0a] text-white"
+      dir={isRTL ? 'rtl' : 'ltr'}
+      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+    >
+      <header className="sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-[#d4af37]/10">
+        <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+          <button
+            onClick={() => setSearchOpen(!searchOpen)}
+            className="p-2 hover:bg-[#d4af37]/10 rounded-lg transition-colors"
+          >
+            <Search className="w-5 h-5 text-[#d4af37]" />
+          </button>
+
+          <div className="flex flex-col items-center">
+            <h1 className="text-xl tracking-wider" style={{ fontFamily: 'Georgia, serif' }}>
+              <span className="text-[#d4af37]">ROYAL</span> DINE
+            </h1>
+            <div className="text-[10px] text-gray-500 tracking-widest">
+              {t('FINE DINING', 'مطعم فاخر', 'خواردنی شاهانە')}
+            </div>
+          </div>
+
+          <button
+            onClick={toggleLanguage}
+            className="p-2 hover:bg-[#d4af37]/10 rounded-lg transition-colors flex items-center gap-1"
+          >
+            <Languages className="w-5 h-5 text-[#d4af37]" />
+            <span className="text-xs text-[#d4af37] font-bold">
+              {language.toUpperCase()}
+            </span>
+          </button>
+        </div>
+
+        {searchOpen && (
+          <div className="px-4 pb-4 max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder={t('Search menu...', 'البحث في القائمة...', 'گەڕان بۆ خواردن...')}
+              className="w-full bg-[#1a1a1a] border border-[#d4af37]/20 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#d4af37]/50 transition-colors"
+            />
+          </div>
+        )}
+      </header>
+
+      <div className="sticky top-16 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-[#d4af37]/10">
+        <div className="max-w-md mx-auto overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 px-4 py-4">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`
+                  px-6 py-2.5 rounded-full whitespace-nowrap text-sm transition-all
+                  ${selectedCategory === cat.id
+                    ? 'bg-gradient-to-r from-[#d4af37] to-[#f4bf47] text-black shadow-lg shadow-[#d4af37]/20'
+                    : 'bg-[#1a1a1a] text-gray-400 hover:text-white border border-[#d4af37]/20'
+                  }
+                `}
+              >
+                {getCatName(cat)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <main className="max-w-md mx-auto px-4 py-6 pb-24">
+        <div className="space-y-4">
+          {filteredMenu.map(item => (
+            <div
+              key={item.id}
+              className="group bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-2xl overflow-hidden border border-[#d4af37]/10 hover:border-[#d4af37]/30 transition-all duration-300"
+            >
+              <div className="relative h-48 overflow-hidden">
+                <img src={item.image} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg mb-1">{getItemName(item)}</h3>
+                <p className="text-sm text-gray-400 mb-4">{getItemDesc(item)}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl text-[#d4af37]">${item.price}</span>
+                  <button
+                    onClick={() => addToCart(item)}
+                    className="flex items-center gap-2 bg-[#d4af37] text-black px-5 py-2 rounded-full font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t('Add', 'إضافة', 'زیادکردن')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {totalItems > 0 && (
+        <button 
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-6 right-6 bg-[#d4af37] text-black p-4 rounded-full shadow-2xl z-50"
+        >
+          <div className="relative">
+            <ShoppingCart className="w-6 h-6" />
+            <span className="absolute -top-2 -right-2 bg-black text-[#d4af37] text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
+          </div>
+        </button>
+      )}
+
+      {cartOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm">
+          <div className="max-w-md mx-auto h-full bg-[#0a0a0a] flex flex-col">
+            <div className="p-4 border-b border-[#d4af37]/20 flex items-center justify-between">
+              <h2 className="text-xl text-[#d4af37] font-serif">{t('Order Cart', 'سلة الطلبات', 'سەبەتەی داواکاری')}</h2>
+              <button onClick={() => setCartOpen(false)}><X className="w-6 h-6" /></button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {cart.map(item => (
+                <div key={item.id} className="flex items-center gap-4 bg-[#1a1a1a] p-3 rounded-xl">
+                  <img src={item.image} className="w-16 h-16 rounded-lg object-cover" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium">{getItemName(item)}</h4>
+                    <p className="text-[#d4af37]">${item.price} x {item.quantity}</p>
+                  </div>
+                  <button onClick={() => removeFromCart(item.id)} className="text-red-500 p-2">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 border-t border-[#d4af37]/20 bg-[#1a1a1a]">
+              <div className="flex justify-between mb-4 text-xl">
+                <span>{t('Total:', 'المجموع:', 'کۆی گشتی:')}</span>
+                <span className="text-[#d4af37]">${totalPrice}</span>
+              </div>
+              <button
+                onClick={handleWhatsAppOrder}
+                className="w-full bg-green-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-green-700 transition-colors"
+              >
+                {t('Send to WhatsApp', 'إرسال إلى واتساب', 'ناردن بۆ واتسئەپ')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
