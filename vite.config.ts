@@ -3,7 +3,15 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
-
+// https://vitejs.dev/config/
+export default defineConfig({
+  base: "/Premiumrestaurantmenuui/",
+  plugins: [
+    tailwindcss(),
+    react(),
+    figmaAssetResolver()
+  ],
+})
 function figmaAssetResolver() {
   return {
     name: 'figma-asset-resolver',
