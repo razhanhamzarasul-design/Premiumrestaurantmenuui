@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, ShoppingCart, Plus, Languages, X, Trash2 } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Languages, X, Trash2, AlertCircle, ShoppingBag } from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -173,6 +173,9 @@ export default function App() {
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   const handleWhatsAppOrder = () => {
+    // ئەگەر سەبەتەکە بەتاڵ بوو هیچ مەکە
+    if (cart.length === 0) return;
+
     let message = t("*New Order*\n\n", "*طلب جديد*\n\n", "*داواکاری نوێ*\n\n");
     cart.forEach((item, index) => {
       message += `${index + 1}. ${getItemName(item)} (${item.quantity}x) - $${item.price * item.quantity}\n`;
@@ -197,8 +200,8 @@ export default function App() {
         </div>
       </header>
 
-      <div className="sticky top-16 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-[#d4af37]/10 overflow-x-auto">
-        <div className="max-w-md mx-auto flex gap-2 px-4 py-4 scrollbar-hide">
+      <div className="sticky top-16 z-40 bg-[#0a0a0a]/95 backdrop-blur-lg border-b border-[#d4af37]/10 overflow-x-auto scrollbar-hide">
+        <div className="max-w-md mx-auto flex gap-2 px-4 py-4">
           {categories.map(cat => (
             <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`px-6 py-2 rounded-full whitespace-nowrap text-sm transition-all ${selectedCategory === cat.id ? 'bg-[#d4af37] text-black' : 'bg-[#1a1a1a] text-gray-400'}`}>
               {getCatName(cat)}
@@ -227,31 +230,81 @@ export default function App() {
         </div>
       </main>
 
-      {totalItems > 0 && (
-        <button onClick={() => setCartOpen(true)} className="fixed bottom-6 right-6 bg-[#d4af37] text-black p-4 rounded-full shadow-2xl z-50">
-          <div className="relative"><ShoppingCart className="w-6 h-6" /><span className="absolute -top-2 -right-2 bg-black text-[#d4af37] text-xs w-5 h-5 rounded-full flex items-center justify-center">{totalItems}</span></div>
-        </button>
-      )}
+      {/* دوگمەی سەرەکی سەبەتە - تەنها کاتێک دەردەکەوێت کە شتێک هەبێت */}
+      <button onClick={() => setCartOpen(true)} className="fixed bottom-6 right-6 bg-[#d4af37] text-black p-4 rounded-full shadow-2xl z-50">
+        <div className="relative">
+          <ShoppingCart className="w-6 h-6" />
+          {totalItems > 0 && (
+            <span className="absolute -top-2 -right-2 bg-black text-[#d4af37] text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+              {totalItems}
+            </span>
+          )}
+        </div>
+      </button>
 
       {cartOpen && (
         <div className="fixed inset-0 z-[60] bg-black/90 flex items-end">
-          <div className="w-full max-w-md mx-auto h-[80vh] bg-[#0a0a0a] rounded-t-3xl flex flex-col">
-            <div className="p-4 border-b border-[#d4af37]/20 flex justify-between">
-              <h2 className="text-xl text-[#d4af37]">{t('Order Cart', 'سلة الطلبات', 'سەبەتەی داواکاری')}</h2>
-              <button onClick={() => setCartOpen(false)}><X className="w-6 h-6" /></button>
+          <div className="w-full max-w-md mx-auto h-[80vh] bg-[#0a0a0a] rounded-t-3xl flex flex-col border-t border-[#d4af37]/30">
+            <div className="p-4 border-b border-[#d4af37]/10 flex justify-between items-center">
+              <h2 className="text-xl text-[#d4af37] font-serif">{t('Order Cart', 'سلة الطلبات', 'سەبەتەی داواکاری')}</h2>
+              <button onClick={() => setCartOpen(false)} className="p-2 text-gray-400"><X className="w-6 h-6" /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cart.map(item => (
-                <div key={item.id} className="flex gap-4 bg-[#1a1a1a] p-3 rounded-xl items-center">
-                  <img src={item.image} className="w-16 h-16 rounded-lg object-cover" alt="" />
-                  <div className="flex-1"><h4>{getItemName(item)}</h4><p className="text-[#d4af37]">${item.price} x {item.quantity}</p></div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-red-500"><Trash2 className="w-5 h-5" /></button>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {cart.length === 0 ? (
+                /* لێرەدا پەیامی بەتاڵبوونی سەبەتەکە پیشان دەدەین بە ئایکۆنێکی سوورەوە */
+                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="p-6 bg-red-500/10 rounded-full">
+                    <AlertCircle className="w-16 h-16 text-red-500" />
+                  </div>
+                  <div className="space-y-2 px-6">
+                    <h3 className="text-xl font-bold text-white">
+                      {t('Your cart is empty!', 'سلتك فارغة!', 'سەبەتەکەت بەتاڵە!')}
+                    </h3>
+                    <p className="text-gray-400 text-sm">
+                      {t(
+                        'Please add some delicious food from the menu before ordering.',
+                        'يرجى إضافة بعض الطعام اللذيذ من القائمة قبل الطلب.',
+                        'تکایە پێش داواکردن، هەندێک خواردنی بەتام لە مێنووەکە زیاد بکە.'
+                      )}
+                    </p>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <div className="space-y-4">
+                  {cart.map(item => (
+                    <div key={item.id} className="flex gap-4 bg-[#1a1a1a] p-3 rounded-xl items-center border border-[#d4af37]/5">
+                      <img src={item.image} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium">{getItemName(item)}</h4>
+                        <p className="text-[#d4af37]">${item.price} x {item.quantity}</p>
+                      </div>
+                      <button onClick={() => removeFromCart(item.id)} className="text-red-500/80 hover:text-red-500 p-2">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="p-6 border-t border-[#d4af37]/20">
-              <div className="flex justify-between mb-4 text-xl"><span>{t('Total:', 'المجموع:', 'کۆی گشتی:')}</span><span className="text-[#d4af37]">${totalPrice}</span></div>
-              <button onClick={handleWhatsAppOrder} className="w-full bg-green-600 py-4 rounded-xl font-bold">{t('Send to WhatsApp', 'إرسال إلى واتساب', 'ناردن بۆ واتسئەپ')}</button>
+
+            <div className="p-6 border-t border-[#d4af37]/20 bg-[#0f0f0f]">
+              <div className="flex justify-between mb-4 text-xl font-bold">
+                <span>{t('Total:', 'المجموع:', 'کۆی گشتی:')}</span>
+                <span className="text-[#d4af37]">${totalPrice}</span>
+              </div>
+              
+              <button 
+                onClick={handleWhatsAppOrder} 
+                disabled={cart.length === 0}
+                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${
+                  cart.length === 0 
+                  ? 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50' 
+                  : 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20 active:scale-95'
+                }`}
+              >
+                {t('Send to WhatsApp', 'إرسال إلى واتساب', 'ناردن بۆ واتسئەپ')}
+              </button>
             </div>
           </div>
         </div>
